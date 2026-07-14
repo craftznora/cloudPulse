@@ -138,18 +138,18 @@ export default function FeedbackPage() {
               className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint"
             />
           </div>
-          <div ref={dropdownRef} className="relative">
+          <div ref={dropdownRef} className="relative w-[170px]">
             <button
               type="button"
               onClick={() => setIsOpen(!isOpen)}
-              className="flex items-center gap-1.5 whitespace-nowrap rounded-[5px] border border-line bg-white px-3.5 py-2 font-mono text-[11px] text-muted hover:border-brand hover:text-ink transition-colors cursor-pointer"
+              className="flex w-full items-center justify-between whitespace-nowrap rounded-[5px] border border-line bg-white pl-3.5 pr-2.5 py-2 font-mono text-[11px] text-muted hover:border-brand hover:text-ink transition-colors cursor-pointer"
             >
               <span>SORT: {SORT_OPTIONS.find((opt) => opt.value === sortBy)?.label}</span>
               <span className="text-[10px] text-faint">▾</span>
             </button>
 
             {isOpen && (
-              <div className="dropdown-in absolute right-0 mt-1.5 w-48 rounded-[5px] border border-line bg-white py-1 shadow-lg shadow-navy/5 z-20">
+              <div className="dropdown-in absolute right-0 mt-1.5 w-full rounded-[5px] border border-line bg-white py-1 shadow-lg shadow-navy/5 z-20">
                 {SORT_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
