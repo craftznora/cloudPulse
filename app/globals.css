@@ -43,6 +43,22 @@
 
 /* ---------- Animations ---------- */
 
+/* Dropdown entrance animation */
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-in {
+  animation: dropdown-in 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* Scroll reveal (driven by components/Reveal.jsx) */
 .reveal {
   opacity: 0;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Badge from "../../components/Badge";
 import FeedbackDrawer from "../../components/FeedbackDrawer";
@@ -8,6 +8,13 @@ import Reveal from "../../components/Reveal";
 import { feedbackItems, sentimentSplit, totalSubmissions } from "../../lib/data";
 
 const PAGE_SIZE = 3;
+
+const SORT_OPTIONS = [
+  { value: "newest", label: "NEWEST" },
+  { value: "oldest", label: "OLDEST" },
+  { value: "sentiment-desc", label: "SENTIMENT (POS)" },
+  { value: "sentiment-asc", label: "SENTIMENT (NEG)" },
+];
 
 const filters = [
   { key: "ALL", label: "All", count: feedbackItems.length },
@@ -22,7 +29,22 @@ export default function FeedbackPage() {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(null);
   const [sortBy, setSortBy] = useState("newest");
+  const [isOpen, setIsOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Reset to page 1 when filter or query changes
   useEffect(() => {
@@ -116,18 +138,37 @@ export default function FeedbackPage() {
               className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint"
             />
           </div>
-          <div className="relative flex items-center">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="appearance-none rounded-[5px] border border-line bg-white pl-3.5 pr-7 py-2 font-mono text-[11px] text-muted outline-none cursor-pointer hover:border-brand transition-colors"
+          <div ref={dropdownRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setIsOpen(!isOpen)}
+              className="flex items-center gap-1.5 whitespace-nowrap rounded-[5px] border border-line bg-white px-3.5 py-2 font-mono text-[11px] text-muted hover:border-brand hover:text-ink transition-colors cursor-pointer"
             >
-              <option value="newest">SORT: NEWEST</option>
-              <option value="oldest">SORT: OLDEST</option>
-              <option value="sentiment-desc">SORT: SENTIMENT (POS)</option>
-              <option value="sentiment-asc">SORT: SENTIMENT (NEG)</option>
-            </select>
-            <span className="absolute right-2.5 pointer-events-none text-muted text-[10px]">▾</span>
+              <span>SORT: {SORT_OPTIONS.find((opt) => opt.value === sortBy)?.label}</span>
+              <span className="text-[10px] text-faint">▾</span>
+            </button>
+
+            {isOpen && (
+              <div className="dropdown-in absolute right-0 mt-1.5 w-48 rounded-[5px] border border-line bg-white py-1 shadow-lg shadow-navy/5 z-20">
+                {SORT_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      setSortBy(opt.value);
+                      setIsOpen(false);
+                    }}
+                    className={`flex w-full items-center px-3.5 py-2 text-left font-mono text-[11px] transition-colors cursor-pointer ${
+                      sortBy === opt.value
+                        ? "bg-brand-soft text-brand font-semibold"
+                        : "text-muted hover:bg-panel hover:text-ink"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>
