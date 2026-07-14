@@ -51,17 +51,9 @@ export default function SignInPage() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <div className="flex items-baseline justify-between">
-              <label htmlFor="password" className="text-[13.5px] font-semibold">
-                Password
-              </label>
-              <Link
-                href="/forgot-password"
-                className="text-[12.5px] font-medium text-brand"
-              >
-                Forgot password?
-              </Link>
-            </div>
+            <label htmlFor="password" className="text-[13.5px] font-semibold">
+              Password
+            </label>
             <div className="flex items-center gap-3 rounded-[5px] border border-input-line bg-input-bg px-4 py-3 focus-within:border-brand focus-within:shadow-[0_0_0_3px_#e9edf9]">
               <input
                 id="password"

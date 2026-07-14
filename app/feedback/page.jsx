@@ -31,7 +31,14 @@ export default function FeedbackPage() {
   const [sortBy, setSortBy] = useState("newest");
   const [isOpen, setIsOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
   const dropdownRef = useRef(null);
+
+  // Simulated GET /feedback latency so the skeleton state is visible
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 900);
+    return () => clearTimeout(t);
+  }, []);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -189,21 +196,98 @@ export default function FeedbackPage() {
       {/* Table */}
       <section className="px-5 pb-16 sm:px-14">
         <div className="overflow-hidden rounded-lg border border-line bg-white">
-          <div className="hidden grid-cols-[1fr_110px_70px_130px_100px] gap-4 border-b border-line bg-panel px-6 py-3 font-mono text-[10.5px] tracking-[0.08em] text-faint md:grid">
-            <span>TITLE</span>
-            <span>CATEGORY</span>
-            <span>SENT.</span>
-            <span>ATTACHMENT</span>
-            <span className="text-right">CREATED</span>
-          </div>
-
-          {totalFilteredCount === 0 && (
-            <div className="pop-in px-6 py-10 text-center font-mono text-xs text-faint">
-              NO MATCHES · TRY A DIFFERENT FILTER OR SEARCH
+          {loading ? (
+            <div className="flex justify-between border-b border-line bg-panel px-6 py-3 font-mono text-[10.5px] tracking-[0.08em] text-faint">
+              <span>LOADING · GET /feedback</span>
+              <span>SKELETON</span>
+            </div>
+          ) : (
+            <div className="hidden grid-cols-[1fr_110px_70px_130px_100px] gap-4 border-b border-line bg-panel px-6 py-3 font-mono text-[10.5px] tracking-[0.08em] text-faint md:grid">
+              <span>TITLE</span>
+              <span>CATEGORY</span>
+              <span>SENT.</span>
+              <span>ATTACHMENT</span>
+              <span className="text-right">CREATED</span>
             </div>
           )}
 
-          {paginatedItems.map((item, i) => (
+          {loading && (
+            <>
+              {[0, 1, 2].map((row) => (
+                <div
+                  key={row}
+                  className={`grid animate-pulse items-center gap-3 px-6 py-[19px] md:grid-cols-[1fr_110px_70px_130px_100px] md:gap-4 ${
+                    row < 2 ? "border-b border-line-soft" : ""
+                  }`}
+                >
+                  <div className="flex flex-col gap-2">
+                    <span className="h-3 w-1/2 rounded-[3px] bg-line-soft" />
+                    <span className="h-2.5 w-3/4 rounded-[3px] bg-neu-soft" />
+                  </div>
+                  <span className="h-5 w-[70px] rounded-[3px] bg-neu-soft" />
+                  <span className="h-5 w-11 rounded-[3px] bg-neu-soft" />
+                  <span className="h-2.5 w-16 rounded-[3px] bg-neu-soft" />
+                  <span className="h-2.5 w-14 rounded-[3px] bg-neu-soft md:justify-self-end" />
+                </div>
+              ))}
+            </>
+          )}
+
+          {!loading && feedbackItems.length === 0 && (
+            <div className="pop-in flex flex-col items-center gap-3.5 px-6 py-11 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-[10px] bg-brand-soft">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3d5ac8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 5 V19" />
+                  <path d="M5 12 H19" />
+                </svg>
+              </div>
+              <div className="text-[17px] font-semibold">Nothing here yet</div>
+              <div className="max-w-[380px] text-[13.5px] leading-relaxed text-muted">
+                Be the first. The team can't fix what it can't see.
+              </div>
+              <Link
+                href="/submit"
+                className="mt-1 rounded-[5px] bg-brand px-5.5 py-2.75 text-[13.5px] font-semibold text-white transition-colors hover:bg-brand-dark"
+              >
+                Submit the first feedback
+              </Link>
+            </div>
+          )}
+
+          {!loading && feedbackItems.length > 0 && totalFilteredCount === 0 && (
+            <div className="pop-in flex flex-col items-center gap-3.5 px-6 py-11 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-[10px] bg-neu-soft">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8792a8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="10.5" cy="10.5" r="6.5" />
+                  <path d="M15.5 15.5 L20.5 20.5" />
+                </svg>
+              </div>
+              <div className="text-[17px] font-semibold">
+                No matches{query.trim() ? ` for "${query.trim()}"` : ""}
+              </div>
+              <div className="max-w-[380px] text-[13.5px] leading-relaxed text-muted">
+                {filter !== "ALL"
+                  ? `Check the spelling or clear the ${filters.find((f) => f.key === filter)?.label} filter. ${feedbackItems.length} items are hiding behind it.`
+                  : "Check the spelling or try a broader search."}
+              </div>
+              <div className="mt-1 flex gap-2.5">
+                <button
+                  onClick={() => setQuery("")}
+                  className="rounded-[5px] border border-input-line px-4.5 py-2.25 text-[13px] font-medium transition-colors hover:border-brand"
+                >
+                  Clear search
+                </button>
+                <button
+                  onClick={() => setFilter("ALL")}
+                  className="rounded-[5px] border border-input-line px-4.5 py-2.25 text-[13px] font-medium transition-colors hover:border-brand"
+                >
+                  Reset filters
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!loading && paginatedItems.map((item, i) => (
             <div
               key={item.id}
               role="button"
@@ -242,6 +326,7 @@ export default function FeedbackPage() {
         </div>
 
         {/* Pagination (currently static, will connect to API paging) */}
+        {!loading && totalFilteredCount > 0 && (
         <div className="flex items-center justify-between px-1 pt-4 font-mono text-[11.5px] text-faint">
           <span>
             SHOWING {from}–{to} OF {totalFilteredCount}
@@ -289,6 +374,7 @@ export default function FeedbackPage() {
             </button>
           </div>
         </div>
+        )}
       </section>
 
       {selected && <FeedbackDrawer item={selected} onClose={() => setSelected(null)} />}

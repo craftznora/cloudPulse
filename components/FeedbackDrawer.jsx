@@ -84,7 +84,7 @@ export default function FeedbackDrawer({ item, onClose }) {
           </div>
         </div>
 
-        {/* Mobile header — full-screen sheet style */}
+        {/* Mobile header: full-screen sheet style */}
         <div className="flex items-center justify-between bg-navy px-4.5 py-3.5 text-[#e8ecf5] md:hidden">
           <div className="flex items-center gap-2.5">
             <button onClick={onClose} aria-label="Back" className="text-base">
@@ -166,7 +166,7 @@ export default function FeedbackDrawer({ item, onClose }) {
               <div className="border-t border-line-soft px-4 py-2.5 font-mono text-[10px] tracking-[0.06em] text-faint">
                 {attachmentDemo
                   ? "DEMO: PRE-SIGNED URL INTEGRATION PENDING"
-                  : "OPENS VIA PRE-SIGNED URL — LINK EXPIRES IN 15 MIN"}
+                  : "OPENS VIA PRE-SIGNED URL · LINK EXPIRES IN 15 MIN"}
               </div>
             </div>
           )}
@@ -192,7 +192,7 @@ export default function FeedbackDrawer({ item, onClose }) {
 
         <div className="mt-auto flex flex-col items-center gap-3 border-t border-line-soft bg-input-bg px-5 py-4 md:flex-row md:justify-between md:px-7">
           <span className="font-mono text-[10px] tracking-[0.06em] text-faint">
-            READ-ONLY — ENTRIES CAN'T BE EDITED AFTER POSTING
+            READ-ONLY · ENTRIES CAN'T BE EDITED AFTER POSTING
           </span>
           <div className="hidden gap-2.5 md:flex">
             <button
