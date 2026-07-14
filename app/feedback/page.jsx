@@ -1,26 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Badge from "../../components/Badge";
 import FeedbackDrawer from "../../components/FeedbackDrawer";
 import Reveal from "../../components/Reveal";
 import { feedbackItems, sentimentSplit, totalSubmissions } from "../../lib/data";
 
+const PAGE_SIZE = 3;
+
 const filters = [
-  { key: "ALL", label: "All", count: 56 },
-  { key: "FEATURE", label: "Feature", count: 24 },
-  { key: "BUG", label: "Bug", count: 13 },
-  { key: "PROCESS", label: "Process", count: 8 },
-  { key: "PRAISE", label: "Praise", count: 11 },
+  { key: "ALL", label: "All", count: feedbackItems.length },
+  { key: "FEATURE", label: "Feature", count: feedbackItems.filter((item) => item.category === "FEATURE").length },
+  { key: "BUG", label: "Bug", count: feedbackItems.filter((item) => item.category === "BUG").length },
+  { key: "PROCESS", label: "Process", count: feedbackItems.filter((item) => item.category === "PROCESS").length },
+  { key: "PRAISE", label: "Praise", count: feedbackItems.filter((item) => item.category === "PRAISE").length },
 ];
 
 export default function FeedbackPage() {
   const [filter, setFilter] = useState("ALL");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(null);
+  const [sortBy, setSortBy] = useState("newest");
+  const [page, setPage] = useState(1);
 
-  const items = feedbackItems.filter((item) => {
+  // Reset to page 1 when filter or query changes
+  useEffect(() => {
+    setPage(1);
+  }, [filter, query]);
+
+  const filteredItems = feedbackItems.filter((item) => {
     const matchesFilter = filter === "ALL" || item.category === filter;
     const q = query.trim().toLowerCase();
     const matchesQuery =
@@ -29,6 +38,29 @@ export default function FeedbackPage() {
       item.description.toLowerCase().includes(q);
     return matchesFilter && matchesQuery;
   });
+
+  const sortedItems = [...filteredItems].sort((a, b) => {
+    if (sortBy === "newest") {
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    }
+    if (sortBy === "oldest") {
+      return new Date(a.createdAt) - new Date(b.createdAt);
+    }
+    if (sortBy === "sentiment-desc") {
+      return b.sentimentScores.pos - a.sentimentScores.pos;
+    }
+    if (sortBy === "sentiment-asc") {
+      return b.sentimentScores.neg - a.sentimentScores.neg;
+    }
+    return 0;
+  });
+
+  const totalFilteredCount = sortedItems.length;
+  const totalPages = Math.ceil(totalFilteredCount / PAGE_SIZE) || 1;
+  const paginatedItems = sortedItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const from = totalFilteredCount === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const to = Math.min(page * PAGE_SIZE, totalFilteredCount);
 
   return (
     <div>
@@ -84,9 +116,19 @@ export default function FeedbackPage() {
               className="w-full bg-transparent text-[13.5px] outline-none placeholder:text-faint"
             />
           </div>
-          <span className="whitespace-nowrap rounded-[5px] border border-line bg-white px-3.5 py-2.5 font-mono text-[11px] text-muted">
-            SORT: NEWEST ▾
-          </span>
+          <div className="relative flex items-center">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="appearance-none rounded-[5px] border border-line bg-white pl-3.5 pr-7 py-2 font-mono text-[11px] text-muted outline-none cursor-pointer hover:border-brand transition-colors"
+            >
+              <option value="newest">SORT: NEWEST</option>
+              <option value="oldest">SORT: OLDEST</option>
+              <option value="sentiment-desc">SORT: SENTIMENT (POS)</option>
+              <option value="sentiment-asc">SORT: SENTIMENT (NEG)</option>
+            </select>
+            <span className="absolute right-2.5 pointer-events-none text-muted text-[10px]">▾</span>
+          </div>
         </div>
       </section>
 
@@ -101,13 +143,13 @@ export default function FeedbackPage() {
             <span className="text-right">CREATED</span>
           </div>
 
-          {items.length === 0 && (
+          {totalFilteredCount === 0 && (
             <div className="pop-in px-6 py-10 text-center font-mono text-xs text-faint">
               NO MATCHES · TRY A DIFFERENT FILTER OR SEARCH
             </div>
           )}
 
-          {items.map((item, i) => (
+          {paginatedItems.map((item, i) => (
             <div
               key={item.id}
               role="button"
@@ -115,7 +157,7 @@ export default function FeedbackPage() {
               onClick={() => setSelected(item)}
               onKeyDown={(e) => e.key === "Enter" && setSelected(item)}
               className={`pop-in grid cursor-pointer items-center gap-3 px-6 py-4 transition-colors hover:bg-panel md:grid-cols-[1fr_110px_70px_130px_100px] md:gap-4 ${
-                i < items.length - 1 ? "border-b border-line-soft" : ""
+                i < paginatedItems.length - 1 ? "border-b border-line-soft" : ""
               } ${selected?.id === item.id ? "bg-brand-soft/50 shadow-[inset_3px_0_0_#3d5ac8]" : ""}`}
               style={{ animationDelay: `${i * 45}ms` }}
             >
@@ -148,15 +190,49 @@ export default function FeedbackPage() {
         {/* Pagination (currently static, will connect to API paging) */}
         <div className="flex items-center justify-between px-1 pt-4 font-mono text-[11.5px] text-faint">
           <span>
-            SHOWING 1–{items.length} OF {totalSubmissions}
+            SHOWING {from}–{to} OF {totalFilteredCount}
           </span>
           <div className="flex gap-1.5">
-            <span className="rounded-[4px] border border-line bg-white px-3 py-1.5 text-[#c2c9d6]">
+            <button
+              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+              disabled={page === 1}
+              className={`rounded-[4px] border px-3 py-1.5 transition-colors ${
+                page === 1
+                  ? "border-line bg-white text-[#c2c9d6] cursor-not-allowed"
+                  : "border-line bg-white text-muted hover:border-brand cursor-pointer"
+              }`}
+            >
               ← PREV
-            </span>
-            <span className="rounded-[4px] border border-brand bg-brand px-3 py-1.5 text-white">1</span>
-            <span className="rounded-[4px] border border-line bg-white px-3 py-1.5">2</span>
-            <span className="rounded-[4px] border border-line bg-white px-3 py-1.5">NEXT →</span>
+            </button>
+            
+            {Array.from({ length: totalPages }, (_, idx) => {
+              const pageNum = idx + 1;
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setPage(pageNum)}
+                  className={`rounded-[4px] border px-3 py-1.5 transition-colors cursor-pointer ${
+                    page === pageNum
+                      ? "border-brand bg-brand text-white font-semibold"
+                      : "border-line bg-white text-muted hover:border-brand"
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+
+            <button
+              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={page === totalPages}
+              className={`rounded-[4px] border px-3 py-1.5 transition-colors ${
+                page === totalPages
+                  ? "border-line bg-white text-[#c2c9d6] cursor-not-allowed"
+                  : "border-line bg-white text-muted hover:border-brand cursor-pointer"
+              }`}
+            >
+              NEXT →
+            </button>
           </div>
         </div>
       </section>
