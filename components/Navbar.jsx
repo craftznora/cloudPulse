@@ -74,7 +74,7 @@ export default function Navbar() {
           })}
         </nav>
 
-        {/* Cognito wiring lands in Phase 4; pages are live now */}
+        {/* TODO: integrate user auth/Cognito state here */}
         <div className="flex items-center gap-2.5">
           <Link
             href="/signin"

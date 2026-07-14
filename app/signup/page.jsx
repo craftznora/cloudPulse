@@ -26,7 +26,7 @@ export default function SignUpPage() {
 
   function handleSubmit(e) {
     e.preventDefault();
-    // Phase 4 wires this to Cognito (SignUp + email verification code).
+    // TODO: connect with Cognito signup and verification flows
     setSubmitted(true);
   }
 
@@ -131,7 +131,7 @@ export default function SignUpPage() {
 
           {submitted && (
             <div className="pop-in rounded-[5px] bg-pos-soft px-4 py-3 font-mono text-xs text-pos">
-              DEMO: form works. Cognito email verification lands in Phase 4.
+              Mock account created. Cognito authentication integration is pending.
             </div>
           )}
 

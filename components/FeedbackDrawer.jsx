@@ -42,7 +42,7 @@ export default function FeedbackDrawer({ item, onClose }) {
     setTimeout(() => setCopied(false), 1500);
   }
 
-  // Attachment opens via a pre-signed S3 URL in Phase 2.
+  // TODO: fetch and open pre-signed S3 URL for download
   function openAttachment() {
     setAttachmentDemo(true);
     setTimeout(() => setAttachmentDemo(false), 2200);
@@ -165,7 +165,7 @@ export default function FeedbackDrawer({ item, onClose }) {
               </div>
               <div className="border-t border-line-soft px-4 py-2.5 font-mono text-[10px] tracking-[0.06em] text-faint">
                 {attachmentDemo
-                  ? "DEMO: PRE-SIGNED URL LANDS IN PHASE 2"
+                  ? "DEMO: PRE-SIGNED URL INTEGRATION PENDING"
                   : "OPENS VIA PRE-SIGNED URL — LINK EXPIRES IN 15 MIN"}
               </div>
             </div>

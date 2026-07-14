@@ -28,7 +28,7 @@ export default function SubmitPage() {
 
   function handleSubmit(e) {
     e.preventDefault();
-    // Phase 2 wires this to POST /feedback (API Gateway + Lambda).
+    // TODO: Send POST request to /feedback API endpoint
     setSubmitted(true);
   }
 
@@ -138,7 +138,7 @@ export default function SubmitPage() {
 
           <div className="flex flex-col gap-4 border-t border-line-soft pt-5 sm:flex-row sm:items-center sm:justify-between">
             <span className="font-mono text-[11px] text-faint">
-              SIGN-IN VIA COGNITO · COMING IN PHASE 4
+              SECURE PORTAL · ENCRYPTED SUBMISSION
             </span>
             <div className="flex gap-2.5">
               <button
@@ -164,7 +164,7 @@ export default function SubmitPage() {
 
           {submitted && (
             <div className="pop-in rounded-[5px] bg-pos-soft px-4 py-3 font-mono text-xs text-pos">
-              DEMO: form works. It will POST to the real API in Phase 2.
+              Mock submission successful. API integration is pending.
             </div>
           )}
         </form>

@@ -12,7 +12,7 @@ export default function SignInPage() {
 
   function handleSubmit(e) {
     e.preventDefault();
-    // Phase 4 wires this to Cognito (InitiateAuth).
+    // TODO: integrate with Cognito authentication
     setSubmitted(true);
   }
 
@@ -93,7 +93,7 @@ export default function SignInPage() {
 
           {submitted && (
             <div className="pop-in rounded-[5px] bg-pos-soft px-4 py-3 font-mono text-xs text-pos">
-              DEMO: form works. Cognito sign-in lands in Phase 4.
+              Mock sign-in successful. Integration with Cognito auth is pending.
             </div>
           )}
 

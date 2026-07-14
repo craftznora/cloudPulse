@@ -145,7 +145,7 @@ export default function FeedbackPage() {
           ))}
         </div>
 
-        {/* Pagination (static until Phase 2 API) */}
+        {/* Pagination (currently static, will connect to API paging) */}
         <div className="flex items-center justify-between px-1 pt-4 font-mono text-[11.5px] text-faint">
           <span>
             SHOWING 1–{items.length} OF {totalSubmissions}
