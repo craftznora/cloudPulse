@@ -95,7 +95,7 @@ export default function FeedbackPage() {
           <h1 className="text-3xl font-semibold tracking-tight sm:text-[40px]">Feedback list</h1>
         </Reveal>
         <div className="flex flex-wrap items-center gap-5">
-          <div className="flex gap-3.5 rounded-[5px] border border-line bg-white px-4 py-2.5 font-mono text-[11px] text-muted">
+          <div className="flex items-center gap-3.5 rounded-[5px] border border-line bg-white px-4 h-[42px] font-mono text-[11px] text-muted">
             <span>{totalSubmissions} ITEMS</span>
             <span className="text-line">|</span>
             <span className="text-pos">POS {sentimentSplit.pos}%</span>
@@ -104,7 +104,7 @@ export default function FeedbackPage() {
           </div>
           <Link
             href="/submit"
-            className="rounded-[5px] bg-brand px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-brand-dark hover:shadow-lg hover:shadow-brand/20 active:scale-[0.98]"
+            className="flex items-center justify-center rounded-[5px] bg-brand px-5 h-[42px] text-sm font-semibold text-white transition-all hover:bg-brand-dark hover:shadow-lg hover:shadow-brand/20 active:scale-[0.98]"
           >
             + New feedback
           </Link>
@@ -118,7 +118,7 @@ export default function FeedbackPage() {
             <button
               key={key}
               onClick={() => setFilter(key)}
-              className={`whitespace-nowrap rounded-[5px] px-4 py-2 text-[13px] transition-colors ${
+              className={`whitespace-nowrap rounded-[5px] px-4 h-[38px] flex items-center justify-center text-[13px] transition-colors ${
                 filter === key
                   ? "bg-ink font-semibold text-white"
                   : "border border-line bg-white font-medium text-muted hover:border-brand"
@@ -129,8 +129,21 @@ export default function FeedbackPage() {
           ))}
         </div>
         <div className="flex items-center gap-2.5">
-          <div className="flex w-full items-center gap-2 rounded-[5px] border border-line bg-white px-3.5 py-2 lg:w-[260px]">
-            <span className="text-[13px] text-faint">⌕</span>
+          <div className="flex w-full items-center gap-2.5 rounded-[5px] border border-line bg-white px-3.5 h-[38px] lg:w-[260px]">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-faint flex-none"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.3-4.3" />
+            </svg>
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -142,7 +155,7 @@ export default function FeedbackPage() {
             <button
               type="button"
               onClick={() => setIsOpen(!isOpen)}
-              className="flex w-full items-center justify-between whitespace-nowrap rounded-[5px] border border-line bg-white pl-3.5 pr-2.5 py-2 font-mono text-[11px] text-muted hover:border-brand hover:text-ink transition-colors cursor-pointer"
+              className="flex w-full items-center justify-between whitespace-nowrap rounded-[5px] border border-line bg-white pl-3.5 pr-2.5 h-[38px] font-mono text-[11px] text-muted hover:border-brand hover:text-ink transition-colors cursor-pointer"
             >
               <span>SORT: {SORT_OPTIONS.find((opt) => opt.value === sortBy)?.label}</span>
               <span className="text-[10px] text-faint">▾</span>
