@@ -11,7 +11,7 @@ const steps = [
   },
   {
     title: "Automatic analysis",
-    body: "The system automatically processes descriptions to tags and category metadata.",
+    body: "The system automatically analyzes and scores sentiment.",
   },
   {
     title: "Team review",
