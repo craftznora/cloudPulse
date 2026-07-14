@@ -17,7 +17,7 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="dot-grid flex justify-center px-5 pb-24 pt-14 sm:px-14 sm:pt-21">
+    <div className="flex justify-center px-5 pb-24 pt-14 sm:px-14 sm:pt-21">
       <div className="flex w-full max-w-[440px] flex-col gap-4">
         <form
           onSubmit={handleSubmit}

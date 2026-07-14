@@ -83,7 +83,7 @@ export default function AboutPage() {
   return (
     <div>
       {/* Page head */}
-      <section className="dot-grid px-5 pb-10 pt-12 sm:px-14">
+      <section className="px-5 pb-10 pt-12 sm:px-14">
         <Reveal>
           <div className="mb-3 font-mono text-xs tracking-[0.1em] text-brand">
             HOW CLOUDPULSE RUNS

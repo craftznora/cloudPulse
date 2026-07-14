@@ -111,7 +111,7 @@ export default function SignUpPage() {
   );
 
   return (
-    <div className="dot-grid flex justify-center px-5 pb-20 pt-12 sm:px-14 sm:pt-16">
+    <div className="flex justify-center px-5 pb-20 pt-12 sm:px-14 sm:pt-16">
       <div className="flex w-full max-w-[440px] flex-col gap-4">
         {step === 1 ? (
           <form

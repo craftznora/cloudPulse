@@ -133,7 +133,7 @@ export default function SubmitPage() {
 
   if (result) {
     return (
-      <div className="dot-grid flex justify-center px-5 pb-24 pt-14 sm:px-14 sm:pt-21">
+      <div className="flex justify-center px-5 pb-24 pt-14 sm:px-14 sm:pt-21">
         <div className="pop-in flex w-full max-w-[560px] flex-col items-center gap-5.5 self-start rounded-lg border border-line bg-white px-6 py-9 text-center sm:px-10">
           <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-pos-soft">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2e7d5b" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
@@ -193,7 +193,7 @@ export default function SubmitPage() {
   return (
     <div>
       {/* Page head */}
-      <section className="dot-grid px-5 pb-6 pt-12 sm:px-14">
+      <section className="px-5 pb-6 pt-12 sm:px-14">
         <Reveal>
           <div className="mb-3 font-mono text-xs tracking-[0.1em] text-brand">
             POST /feedback · AUTH REQUIRED

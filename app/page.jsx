@@ -42,7 +42,7 @@ export default function HomePage() {
   return (
     <div>
       {/* Hero */}
-      <section className="dot-grid px-5 pb-14 pt-14 sm:px-14 sm:pt-18">
+      <section className="px-5 pb-14 pt-14 sm:px-14 sm:pt-18">
         <div className="grid items-center gap-10 lg:grid-cols-[1.2fr_1fr] lg:gap-14">
           <Reveal>
             <div className="mb-4 font-mono text-xs tracking-[0.1em] text-brand">

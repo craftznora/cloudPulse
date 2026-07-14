@@ -24,7 +24,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${splineSans.variable} ${plexMono.variable}`}>
-      <body className="bg-page text-ink font-sans antialiased flex min-h-screen flex-col">
+      <body className="bg-page dot-grid text-ink font-sans antialiased flex min-h-screen flex-col">
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />
