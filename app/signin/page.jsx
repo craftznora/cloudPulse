@@ -55,9 +55,12 @@ export default function SignInPage() {
               <label htmlFor="password" className="text-[13.5px] font-semibold">
                 Password
               </label>
-              <span className="cursor-pointer text-[12.5px] font-medium text-brand">
+              <Link
+                href="/forgot-password"
+                className="text-[12.5px] font-medium text-brand"
+              >
                 Forgot password?
-              </span>
+              </Link>
             </div>
             <div className="flex items-center gap-3 rounded-[5px] border border-input-line bg-input-bg px-4 py-3 focus-within:border-brand focus-within:shadow-[0_0_0_3px_#e9edf9]">
               <input
@@ -106,7 +109,7 @@ export default function SignInPage() {
           <div className="text-center text-[13.5px] text-muted">
             New to CloudPulse?{" "}
             <Link href="/signup" className="font-semibold text-brand">
-              Create an account →
+              Create an account
             </Link>
           </div>
         </form>
