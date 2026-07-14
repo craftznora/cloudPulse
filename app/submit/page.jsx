@@ -4,20 +4,7 @@ import { useState } from "react";
 import { CATEGORIES } from "../../lib/data";
 import Reveal from "../../components/Reveal";
 
-const steps = [
-  {
-    title: "Secure POST",
-    body: "Your Cognito token authorizes the request through API Gateway.",
-  },
-  {
-    title: "Sentiment scored",
-    body: "Lambda calls Comprehend on your description and tags it POS, NEU or NEG.",
-  },
-  {
-    title: "Stored & listed",
-    body: "Item lands in DynamoDB, attachment in private S3, visible in the list instantly.",
-  },
-];
+
 
 export default function SubmitPage() {
   const [title, setTitle] = useState("");
@@ -172,41 +159,45 @@ export default function SubmitPage() {
         {/* Right rail */}
         <div className="flex flex-col gap-4">
           <Reveal delay={150}>
-          <div className="hover-lift rounded-lg border border-line bg-white px-6 py-6">
-            <div className="mb-4 font-mono text-[11px] tracking-[0.1em] text-faint">
-              WHAT HAPPENS NEXT
-            </div>
-            <div className="flex flex-col">
-              {steps.map((s, i) => (
-                <div key={s.title} className="flex gap-3.5">
-                  <div className="flex flex-col items-center">
-                    <span className="flex h-6 w-6 flex-none items-center justify-center rounded-[5px] bg-brand-soft font-mono text-[11px] font-semibold text-brand">
-                      {i + 1}
-                    </span>
-                    {i < steps.length - 1 && (
-                      <span className="my-1 w-px flex-1 bg-line-soft" />
-                    )}
+            <div className="hover-lift rounded-lg border border-line bg-white px-6 py-6">
+              <div className="mb-4 font-mono text-[11px] tracking-[0.1em] text-brand">
+                FEEDBACK GUIDELINES
+              </div>
+              <ul className="flex flex-col gap-4">
+                <li className="flex gap-3">
+                  <span className="flex h-5 w-5 flex-none items-center justify-center rounded-full bg-brand-soft text-[11px] text-brand font-semibold">✓</span>
+                  <div>
+                    <div className="text-[13px] font-semibold">Be constructive</div>
+                    <div className="mt-0.5 text-[12px] leading-relaxed text-muted">Focus on the core issue and outline a potential improvement or alternative.</div>
                   </div>
-                  <div className={i < steps.length - 1 ? "pb-4" : ""}>
-                    <div className="text-[13.5px] font-semibold">{s.title}</div>
-                    <div className="mt-0.5 text-[12.5px] leading-normal text-muted">{s.body}</div>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex h-5 w-5 flex-none items-center justify-center rounded-full bg-brand-soft text-[11px] text-brand font-semibold">✓</span>
+                  <div>
+                    <div className="text-[13px] font-semibold">Be specific</div>
+                    <div className="mt-0.5 text-[12px] leading-relaxed text-muted">Include exact page routes, steps to reproduce, or files where applicable.</div>
                   </div>
-                </div>
-              ))}
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex h-5 w-5 flex-none items-center justify-center rounded-full bg-brand-soft text-[11px] text-brand font-semibold">✓</span>
+                  <div>
+                    <div className="text-[13px] font-semibold">Attach context</div>
+                    <div className="mt-0.5 text-[12px] leading-relaxed text-muted">Upload screenshots, error logs, or mockups to clarify your request.</div>
+                  </div>
+                </li>
+              </ul>
             </div>
-          </div>
-
           </Reveal>
+
           <Reveal delay={250}>
-          <div className="rounded-lg bg-navy px-6 py-5 text-subtext">
-            <div className="mb-2.5 font-mono text-[11px] tracking-[0.1em] text-navlink">
-              WRITING TIP
+            <div className="rounded-lg bg-navy px-6 py-5 text-subtext">
+              <div className="mb-2.5 font-mono text-[11px] tracking-[0.1em] text-navlink">
+                WHY YOUR INPUT MATTERS
+              </div>
+              <div className="text-[12.5px] leading-relaxed">
+                CloudPulse is our team's workspace for continuous platform growth. Your suggestions directly influence our sprint planning, dev workflows, and engineering roadmap.
+              </div>
             </div>
-            <div className="text-[13.5px] leading-relaxed">
-              One issue per submission. “Uploads fail over 5 MB” beats “several upload
-              problems” because it's easier to track, tag, and fix.
-            </div>
-          </div>
           </Reveal>
         </div>
       </section>
