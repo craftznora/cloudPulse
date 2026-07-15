@@ -146,7 +146,7 @@ export default function HomePage() {
               RECENT FEEDBACK · NEWEST FIRST
             </span>
             <Link href="/feedback" className="text-[13.5px] font-semibold text-brand">
-              View all →
+              View all
             </Link>
           </div>
         </Reveal>

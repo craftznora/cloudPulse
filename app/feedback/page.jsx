@@ -341,7 +341,7 @@ export default function FeedbackPage() {
                   : "border-line bg-white text-muted hover:border-brand cursor-pointer"
               }`}
             >
-              ← PREV
+              PREV
             </button>
             
             {Array.from({ length: totalPages }, (_, idx) => {
@@ -370,7 +370,7 @@ export default function FeedbackPage() {
                   : "border-line bg-white text-muted hover:border-brand cursor-pointer"
               }`}
             >
-              NEXT →
+              NEXT
             </button>
           </div>
         </div>
