@@ -197,7 +197,7 @@ export default function SignUpPage() {
               type="submit"
               className="rounded-[5px] bg-brand py-3.5 text-[14.5px] font-semibold text-white transition-all hover:bg-brand-dark hover:shadow-lg hover:shadow-brand/20 active:scale-[0.98]"
             >
-              Continue → verify email
+              Continue to verification
             </button>
 
             <div className="flex items-start gap-3 rounded-[5px] border border-line-soft bg-panel px-4 py-3.5">

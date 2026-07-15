@@ -66,7 +66,7 @@ export default function HomePage() {
                 href="/feedback"
                 className="rounded-[5px] border border-input-line bg-white px-5 py-3 font-mono text-[13px] transition-all hover:border-brand active:scale-[0.98]"
               >
-                BROWSE LIST →
+                BROWSE LIST
               </Link>
             </div>
           </Reveal>

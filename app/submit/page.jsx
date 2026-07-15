@@ -57,6 +57,20 @@ export default function SubmitPage() {
 
   useEffect(() => () => clearInterval(uploadTimer.current), []);
 
+  // Success modal: close on Escape, lock page scroll while open
+  useEffect(() => {
+    if (!result) return;
+    function onKey(e) {
+      if (e.key === "Escape") setResult(null);
+    }
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [result]);
+
   function handleFile(e) {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -130,65 +144,6 @@ export default function SubmitPage() {
       : description.length >= MAX_DESC * 0.9
         ? { text: "text-bug", bar: "bg-bug" }
         : { text: "text-faint", bar: "bg-brand" };
-
-  if (result) {
-    return (
-      <div className="flex justify-center px-5 pb-24 pt-14 sm:px-14 sm:pt-21">
-        <div className="pop-in flex w-full max-w-[560px] flex-col items-center gap-5.5 self-start rounded-lg border border-line bg-white px-6 py-9 text-center sm:px-10">
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-pos-soft">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2e7d5b" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4.5 12.5 L9.5 17.5 L19.5 6.5" />
-            </svg>
-          </div>
-          <div className="flex flex-col items-center gap-2.5">
-            <h1 className="text-[26px] font-semibold tracking-tight sm:text-3xl">
-              Feedback submitted
-            </h1>
-            <p className="max-w-[400px] text-[14.5px] leading-relaxed text-muted">
-              "{result.title}" went through the demo flow. The real API saves it in Phase 2.
-            </p>
-          </div>
-          <div className="flex w-full flex-col gap-2 rounded-[6px] border border-line-soft bg-panel px-4.5 py-4 text-left font-mono text-[11px] text-muted">
-            <div className="flex justify-between">
-              <span className="text-faint">id</span>
-              <span>{result.id}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-faint">category</span>
-              <span className={categoryTones[result.category] ?? "text-ink"}>
-                {result.category}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-faint">sentiment</span>
-              <span className={result.sentiment.tone}>
-                {result.sentiment.label} · {result.sentiment.score.toFixed(2)} · simulated
-                (Comprehend in Phase 5)
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-faint">attachment</span>
-              <span>{result.attachment}</span>
-            </div>
-          </div>
-          <div className="flex flex-wrap justify-center gap-2.5">
-            <Link
-              href="/feedback"
-              className="rounded-[5px] bg-brand px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-brand-dark hover:shadow-lg hover:shadow-brand/20"
-            >
-              View in list →
-            </Link>
-            <button
-              onClick={resetForm}
-              className="rounded-[5px] border border-input-line px-5.5 py-3 text-sm font-medium transition-colors hover:border-brand"
-            >
-              Submit another
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div>
@@ -442,6 +397,74 @@ export default function SubmitPage() {
           </Reveal>
         </div>
       </section>
+
+      {/* Submit success modal */}
+      {result && (
+        <div className="fixed inset-0 z-50">
+          <div className="fade-in absolute inset-0 bg-navy/45" onClick={() => setResult(null)} />
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6">
+            <div className="pop-in pointer-events-auto relative flex w-full max-w-[500px] flex-col items-center gap-4.5 rounded-[10px] border border-line bg-white px-6 py-9 text-center shadow-[0_24px_64px_rgba(17,28,48,0.28)] sm:px-10">
+              <button
+                onClick={() => setResult(null)}
+                aria-label="Close"
+                className="absolute right-3.5 top-3.5 inline-flex h-8 w-8 items-center justify-center rounded-[5px] border border-line text-sm text-muted transition-colors hover:border-ink hover:text-ink"
+              >
+                ✕
+              </button>
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-pos-soft">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2e7d5b" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4.5 12.5 L9.5 17.5 L19.5 6.5" />
+                </svg>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <h2 className="text-[24px] font-semibold tracking-tight sm:text-[27px]">
+                  Feedback submitted
+                </h2>
+                <p className="max-w-[360px] text-sm leading-relaxed text-muted">
+                  "{result.title}" went through the demo flow. The real API saves it in Phase 2.
+                </p>
+              </div>
+              <div className="flex w-full flex-col gap-2 rounded-[6px] border border-line-soft bg-panel px-4 py-3.5 text-left font-mono text-[11px] text-muted">
+                <div className="flex justify-between">
+                  <span className="text-faint">id</span>
+                  <span>{result.id}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-faint">category</span>
+                  <span className={categoryTones[result.category] ?? "text-ink"}>
+                    {result.category}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-faint">sentiment</span>
+                  <span className={result.sentiment.tone}>
+                    {result.sentiment.label} · {result.sentiment.score.toFixed(2)} · simulated
+                    (Comprehend in Phase 5)
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-faint">attachment</span>
+                  <span>{result.attachment}</span>
+                </div>
+              </div>
+              <div className="flex flex-wrap justify-center gap-2.5">
+                <Link
+                  href="/feedback"
+                  className="rounded-[5px] bg-brand px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-brand-dark hover:shadow-lg hover:shadow-brand/20"
+                >
+                  View in list
+                </Link>
+                <button
+                  onClick={resetForm}
+                  className="rounded-[5px] border border-input-line px-5.5 py-3 text-sm font-medium transition-colors hover:border-brand"
+                >
+                  Submit another
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
