@@ -306,13 +306,7 @@ export default function SignUpPage() {
           </form>
         )}
 
-        <CognitoNote
-          text={
-            step === 1
-              ? "Passwords are secured by Amazon Cognito and never stored by this app."
-              : "Verification codes are issued by Amazon Cognito."
-          }
-        />
+        <CognitoNote text="SECURED BY AMAZON COGNITO" />
       </div>
     </div>
   );

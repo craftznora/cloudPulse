@@ -106,7 +106,7 @@ export default function SignInPage() {
           </div>
         </form>
 
-        <CognitoNote text="Secured by Amazon Cognito with automatic session management." />
+        <CognitoNote text="SECURED BY AMAZON COGNITO" />
       </div>
     </div>
   );
