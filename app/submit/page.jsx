@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CATEGORIES } from "../../lib/data";
+import { createFeedback, apiEnabled } from "../../lib/api";
 import Reveal from "../../components/Reveal";
 
 const steps = [
@@ -53,6 +54,8 @@ export default function SubmitPage() {
   const [upload, setUpload] = useState(null); // { name, sizeMB, progress }
   const [rejected, setRejected] = useState(null); // { name, sizeMB, badType }
   const [result, setResult] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
   const uploadTimer = useRef(null);
 
   useEffect(() => () => clearInterval(uploadTimer.current), []);
@@ -120,21 +123,32 @@ export default function SubmitPage() {
     cancelUpload();
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     const trimmed = title.trim();
     if (trimmed.length < 5 || trimmed.length > 120) {
       setTitleError("Title is required, 5 to 120 characters.");
       return;
     }
-    // TODO: Send POST request to /feedback API endpoint
-    setResult({
-      id: "FB-1044",
-      title: trimmed,
-      category: category.toUpperCase(),
-      sentiment: mockSentiment(`${trimmed} ${description}`),
-      attachment: fileName || "none",
-    });
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      // POST /feedback via API Gateway → Lambda → DynamoDB
+      const item = await createFeedback({ title: trimmed, description, category });
+      setResult({
+        id: item.ref,
+        title: item.title,
+        category: item.category,
+        // Real sentiment arrives in Phase 5 (Comprehend); simulated in mock mode
+        sentiment: apiEnabled ? null : mockSentiment(`${trimmed} ${description}`),
+        attachment: fileName || "none",
+        live: apiEnabled,
+      });
+    } catch (err) {
+      setSubmitError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const descPct = Math.round((description.length / MAX_DESC) * 100);
@@ -349,12 +363,35 @@ export default function SubmitPage() {
               </button>
               <button
                 type="submit"
-                className="rounded-[5px] bg-brand px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-brand-dark hover:shadow-lg hover:shadow-brand/20 active:scale-[0.98]"
+                disabled={submitting}
+                className={`rounded-[5px] px-6 py-3 text-sm font-semibold text-white transition-all ${
+                  submitting
+                    ? "cursor-wait bg-brand/60"
+                    : "bg-brand hover:bg-brand-dark hover:shadow-lg hover:shadow-brand/20 active:scale-[0.98]"
+                }`}
               >
-                Submit feedback
+                {submitting ? "Submitting…" : "Submit feedback"}
               </button>
             </div>
           </div>
+
+          {submitError && (
+            <div className="pop-in flex items-center gap-3 rounded-[5px] border border-neg bg-[#fffafa] px-4 py-3">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c05a45" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-none">
+                <circle cx="12" cy="12" r="8.5" />
+                <path d="M12 8 V13" />
+                <circle cx="12" cy="16.2" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <span className="flex-1 text-[13px] text-neg">{submitError}</span>
+              <button
+                type="button"
+                onClick={() => setSubmitError(null)}
+                className="font-mono text-[10.5px] text-muted hover:text-ink"
+              >
+                DISMISS
+              </button>
+            </div>
+          )}
         </form>
 
         {/* Right rail */}
@@ -421,7 +458,9 @@ export default function SubmitPage() {
                   Feedback submitted
                 </h2>
                 <p className="max-w-[360px] text-sm leading-relaxed text-muted">
-                  "{result.title}" went through the demo flow. The real API saves it in Phase 2.
+                  {result.live
+                    ? `"${result.title}" is saved in DynamoDB and now shows in the list.`
+                    : `"${result.title}" went through the demo flow. Set NEXT_PUBLIC_API_URL to save for real.`}
                 </p>
               </div>
               <div className="flex w-full flex-col gap-2 rounded-[6px] border border-line-soft bg-panel px-4 py-3.5 text-left font-mono text-[11px] text-muted">
@@ -437,10 +476,14 @@ export default function SubmitPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-faint">sentiment</span>
-                  <span className={result.sentiment.tone}>
-                    {result.sentiment.label} · {result.sentiment.score.toFixed(2)} · simulated
-                    (Comprehend in Phase 5)
-                  </span>
+                  {result.sentiment ? (
+                    <span className={result.sentiment.tone}>
+                      {result.sentiment.label} · {result.sentiment.score.toFixed(2)} · simulated
+                      (Comprehend in Phase 5)
+                    </span>
+                  ) : (
+                    <span className="text-faint">pending · Comprehend in Phase 5</span>
+                  )}
                 </div>
                 <div className="flex justify-between">
                   <span className="text-faint">attachment</span>

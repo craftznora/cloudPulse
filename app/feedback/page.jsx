@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import Link from "next/link";
 import Badge from "../../components/Badge";
 import FeedbackDrawer from "../../components/FeedbackDrawer";
 import Reveal from "../../components/Reveal";
-import { feedbackItems, sentimentSplit, totalSubmissions } from "../../lib/data";
+import { fetchFeedback } from "../../lib/api";
 
 const PAGE_SIZE = 3;
 
@@ -16,15 +16,8 @@ const SORT_OPTIONS = [
   { value: "sentiment-asc", label: "SENTIMENT (NEG)" },
 ];
 
-const filters = [
-  { key: "ALL", label: "All", count: feedbackItems.length },
-  { key: "FEATURE", label: "Feature", count: feedbackItems.filter((item) => item.category === "FEATURE").length },
-  { key: "BUG", label: "Bug", count: feedbackItems.filter((item) => item.category === "BUG").length },
-  { key: "PROCESS", label: "Process", count: feedbackItems.filter((item) => item.category === "PROCESS").length },
-  { key: "PRAISE", label: "Praise", count: feedbackItems.filter((item) => item.category === "PRAISE").length },
-];
-
 export default function FeedbackPage() {
+  const [feedbackItems, setFeedbackItems] = useState([]);
   const [filter, setFilter] = useState("ALL");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(null);
@@ -32,13 +25,42 @@ export default function FeedbackPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const dropdownRef = useRef(null);
 
-  // Simulated GET /feedback latency so the skeleton state is visible
-  useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 900);
-    return () => clearTimeout(t);
+  // GET /feedback via API Gateway (falls back to mock data without an API URL)
+  const loadItems = useCallback(() => {
+    setLoading(true);
+    setLoadError(null);
+    fetchFeedback()
+      .then(setFeedbackItems)
+      .catch((err) => setLoadError(err.message))
+      .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    loadItems();
+  }, [loadItems]);
+
+  const filters = useMemo(
+    () => [
+      { key: "ALL", label: "All", count: feedbackItems.length },
+      { key: "FEATURE", label: "Feature", count: feedbackItems.filter((item) => item.category === "FEATURE").length },
+      { key: "BUG", label: "Bug", count: feedbackItems.filter((item) => item.category === "BUG").length },
+      { key: "PROCESS", label: "Process", count: feedbackItems.filter((item) => item.category === "PROCESS").length },
+      { key: "PRAISE", label: "Praise", count: feedbackItems.filter((item) => item.category === "PRAISE").length },
+    ],
+    [feedbackItems]
+  );
+
+  // Sentiment split computed from items that have a sentiment (Phase 5 fills it)
+  const sentimentSplit = useMemo(() => {
+    const scored = feedbackItems.filter((item) => item.sentiment);
+    if (scored.length === 0) return null;
+    const pct = (key) =>
+      Math.round((scored.filter((item) => item.sentiment === key).length / scored.length) * 100);
+    return { pos: pct("POS"), neu: pct("NEU"), neg: pct("NEG") };
+  }, [feedbackItems]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -76,10 +98,10 @@ export default function FeedbackPage() {
       return new Date(a.createdAt) - new Date(b.createdAt);
     }
     if (sortBy === "sentiment-desc") {
-      return b.sentimentScores.pos - a.sentimentScores.pos;
+      return (b.sentimentScores?.pos ?? 0) - (a.sentimentScores?.pos ?? 0);
     }
     if (sortBy === "sentiment-asc") {
-      return b.sentimentScores.neg - a.sentimentScores.neg;
+      return (b.sentimentScores?.neg ?? 0) - (a.sentimentScores?.neg ?? 0);
     }
     return 0;
   });
@@ -103,11 +125,17 @@ export default function FeedbackPage() {
         </Reveal>
         <div className="flex flex-wrap items-center gap-5">
           <div className="flex items-center gap-3.5 rounded-[5px] border border-line bg-white px-4 h-[42px] font-mono text-[11px] text-muted">
-            <span>{totalSubmissions} ITEMS</span>
+            <span>{feedbackItems.length} ITEMS</span>
             <span className="text-line">|</span>
-            <span className="text-pos">POS {sentimentSplit.pos}%</span>
-            <span className="text-faint">NEU {sentimentSplit.neu}%</span>
-            <span className="text-neg">NEG {sentimentSplit.neg}%</span>
+            {sentimentSplit ? (
+              <>
+                <span className="text-pos">POS {sentimentSplit.pos}%</span>
+                <span className="text-faint">NEU {sentimentSplit.neu}%</span>
+                <span className="text-neg">NEG {sentimentSplit.neg}%</span>
+              </>
+            ) : (
+              <span className="text-faint">SENTIMENT · PHASE 5</span>
+            )}
           </div>
           <Link
             href="/submit"
@@ -233,7 +261,27 @@ export default function FeedbackPage() {
             </>
           )}
 
-          {!loading && feedbackItems.length === 0 && (
+          {!loading && loadError && (
+            <div className="pop-in flex flex-col items-center gap-3.5 px-6 py-11 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-[10px] bg-neg-soft">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c05a45" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="8.5" />
+                  <path d="M12 8 V13" />
+                  <circle cx="12" cy="16.2" r="1" fill="currentColor" stroke="none" />
+                </svg>
+              </div>
+              <div className="text-[17px] font-semibold">Couldn't load feedback</div>
+              <div className="max-w-[380px] font-mono text-[11.5px] text-muted">{loadError}</div>
+              <button
+                onClick={loadItems}
+                className="mt-1 rounded-[5px] bg-brand px-5 py-2.5 text-[13.5px] font-semibold text-white transition-colors hover:bg-brand-dark"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
+          {!loading && !loadError && feedbackItems.length === 0 && (
             <div className="pop-in flex flex-col items-center gap-3.5 px-6 py-11 text-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-[10px] bg-brand-soft">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3d5ac8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -309,7 +357,11 @@ export default function FeedbackPage() {
                 <Badge label={item.category} />
               </span>
               <span className="justify-self-start">
-                <Badge label={item.sentiment} />
+                {item.sentiment ? (
+                  <Badge label={item.sentiment} />
+                ) : (
+                  <span className="font-mono text-[11px] text-faint">·</span>
+                )}
               </span>
               <span className="font-mono text-[11px] text-faint">
                 {item.attachment ? (

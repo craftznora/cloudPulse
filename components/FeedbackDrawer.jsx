@@ -107,9 +107,16 @@ export default function FeedbackDrawer({ item, onClose }) {
           <div className="flex flex-col gap-3">
             <div className="flex gap-2">
               <Badge label={item.category} />
-              <span className={`rounded-[3px] px-2 py-1 font-mono text-[11px] ${sentimentTones[item.sentiment]}`}>
-                {sentimentNames[item.sentiment]} · {scores[item.sentiment.toLowerCase()].toFixed(2)}
-              </span>
+              {item.sentiment ? (
+                <span className={`rounded-[3px] px-2 py-1 font-mono text-[11px] ${sentimentTones[item.sentiment]}`}>
+                  {sentimentNames[item.sentiment]}
+                  {scores ? ` · ${scores[item.sentiment.toLowerCase()].toFixed(2)}` : ""}
+                </span>
+              ) : (
+                <span className="rounded-[3px] bg-neu-soft px-2 py-1 font-mono text-[11px] text-faint">
+                  SENTIMENT PENDING · PHASE 5
+                </span>
+              )}
             </div>
             <h2 className="text-[23px] font-semibold leading-tight tracking-tight md:text-[26px]">
               {item.title}
@@ -182,10 +189,16 @@ export default function FeedbackDrawer({ item, onClose }) {
             </div>
             <div className="flex justify-between gap-3">
               <span className="text-faint">sentiment</span>
-              <span className={sentimentText[item.sentiment]}>
-                {sentimentNames[item.sentiment]} · NEG {scores.neg.toFixed(2)} / NEU{" "}
-                {scores.neu.toFixed(2)} / POS {scores.pos.toFixed(2)}
-              </span>
+              {item.sentiment ? (
+                <span className={sentimentText[item.sentiment]}>
+                  {sentimentNames[item.sentiment]}
+                  {scores
+                    ? ` · NEG ${scores.neg.toFixed(2)} / NEU ${scores.neu.toFixed(2)} / POS ${scores.pos.toFixed(2)}`
+                    : ""}
+                </span>
+              ) : (
+                <span className="text-faint">pending · Comprehend in Phase 5</span>
+              )}
             </div>
           </div>
         </div>
