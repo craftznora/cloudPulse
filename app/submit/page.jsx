@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CATEGORIES } from "../../lib/data";
-import { createFeedback, apiEnabled } from "../../lib/api";
+import { createFeedback, getUploadUrl, apiEnabled } from "../../lib/api";
 import Reveal from "../../components/Reveal";
 
 const steps = [
@@ -56,6 +56,8 @@ export default function SubmitPage() {
   const [result, setResult] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [attachmentKey, setAttachmentKey] = useState(null);
+  const xhrRef = useRef(null);
   const uploadTimer = useRef(null);
 
   useEffect(() => () => clearInterval(uploadTimer.current), []);
@@ -88,9 +90,15 @@ export default function SubmitPage() {
 
     setRejected(null);
     setFileName("");
+    setAttachmentKey(null);
     setUpload({ name: file.name, sizeMB, progress: 0 });
 
-    // Simulates the PUT to a pre-signed S3 URL until the API is wired up
+    if (apiEnabled) {
+      uploadToS3(file, sizeMB);
+      return;
+    }
+
+    // Mock mode: simulated progress so the UI works without AWS
     clearInterval(uploadTimer.current);
     uploadTimer.current = setInterval(() => {
       setUpload((u) => {
@@ -107,8 +115,46 @@ export default function SubmitPage() {
     }, 160);
   }
 
+  // Real upload: pre-signed URL from Lambda, then PUT straight to S3.
+  // XMLHttpRequest instead of fetch because it reports upload progress.
+  async function uploadToS3(file, sizeMB) {
+    try {
+      const contentType = file.type || "application/octet-stream";
+      const { uploadUrl, key } = await getUploadUrl(file.name, contentType);
+      await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhrRef.current = xhr;
+        xhr.open("PUT", uploadUrl);
+        xhr.setRequestHeader("Content-Type", contentType);
+        xhr.upload.onprogress = (ev) => {
+          if (ev.lengthComputable) {
+            const progress = (ev.loaded / ev.total) * 100;
+            setUpload((u) => (u ? { ...u, progress } : u));
+          }
+        };
+        xhr.onload = () =>
+          xhr.status >= 200 && xhr.status < 300
+            ? resolve()
+            : reject(new Error(`Upload failed (${xhr.status})`));
+        xhr.onerror = () => reject(new Error("Upload failed, check your connection."));
+        xhr.onabort = () => reject(new Error("aborted"));
+        xhr.send(file);
+      });
+      setAttachmentKey(key);
+      setFileName(file.name);
+      setFileSizeMB(sizeMB);
+      setUpload(null);
+    } catch (err) {
+      setUpload(null);
+      if (err.message !== "aborted") {
+        setRejected({ name: file.name, sizeMB, badType: false, uploadError: err.message });
+      }
+    }
+  }
+
   function cancelUpload() {
     clearInterval(uploadTimer.current);
+    xhrRef.current?.abort();
     setUpload(null);
   }
 
@@ -120,6 +166,7 @@ export default function SubmitPage() {
     setTitleError("");
     setRejected(null);
     setResult(null);
+    setAttachmentKey(null);
     cancelUpload();
   }
 
@@ -134,7 +181,12 @@ export default function SubmitPage() {
     setSubmitError(null);
     try {
       // POST /feedback via API Gateway → Lambda → DynamoDB
-      const item = await createFeedback({ title: trimmed, description, category });
+      const item = await createFeedback({
+        title: trimmed,
+        description,
+        category,
+        attachmentKey: attachmentKey || undefined,
+      });
       setResult({
         id: item.ref,
         title: item.title,
@@ -318,9 +370,11 @@ export default function SubmitPage() {
                 </svg>
                 <span className="flex-1 text-[13px] text-neg">
                   <strong className="font-semibold">{rejected.name}</strong>{" "}
-                  {rejected.badType
-                    ? `isn't a supported type. PNG, JPG, PDF only (max ${MAX_FILE_MB} MB).`
-                    : `is ${Math.round(rejected.sizeMB)} MB, max is ${MAX_FILE_MB} MB (PNG, JPG, PDF only).`}
+                  {rejected.uploadError
+                    ? rejected.uploadError
+                    : rejected.badType
+                      ? `isn't a supported type. PNG, JPG, PDF only (max ${MAX_FILE_MB} MB).`
+                      : `is ${Math.round(rejected.sizeMB)} MB, max is ${MAX_FILE_MB} MB (PNG, JPG, PDF only).`}
                 </span>
                 <button
                   type="button"

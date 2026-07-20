@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Badge from "./Badge";
+import { getDownloadUrl, apiEnabled } from "../lib/api";
 
 const sentimentNames = { POS: "POSITIVE", NEU: "NEUTRAL", NEG: "NEGATIVE" };
 const sentimentTones = {
@@ -42,8 +43,17 @@ export default function FeedbackDrawer({ item, onClose }) {
     setTimeout(() => setCopied(false), 1500);
   }
 
-  // TODO: fetch and open pre-signed S3 URL for download
-  function openAttachment() {
+  // Opens the attachment through a short-lived pre-signed S3 URL
+  async function openAttachment() {
+    if (apiEnabled && item.attachment?.key) {
+      try {
+        const url = await getDownloadUrl(item.attachment.key);
+        window.open(url, "_blank", "noopener");
+        return;
+      } catch {
+        // fall through to the demo notice
+      }
+    }
     setAttachmentDemo(true);
     setTimeout(() => setAttachmentDemo(false), 2200);
   }
