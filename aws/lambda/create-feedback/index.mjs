@@ -1,8 +1,10 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { ComprehendClient, DetectSentimentCommand } from "@aws-sdk/client-comprehend";
 import { randomUUID } from "node:crypto";
 
 const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+const comprehend = new ComprehendClient({});
 const TABLE_NAME = process.env.TABLE_NAME || "CloudPulseFeedback";
 
 const CATEGORIES = ["FEATURE", "BUG", "PROCESS", "PRAISE"];
@@ -47,11 +49,26 @@ export const handler = async (event) => {
     category,
     author,
     createdAt: new Date().toISOString(),
-    // sentiment is added by Comprehend in Phase 5
-    // attachmentKey is added by the S3 upload flow in Phase 3
   };
 
   if (payload.attachmentKey) item.attachmentKey = String(payload.attachmentKey);
+
+  // Phase 5: score the description with Comprehend. Best effort on purpose:
+  // if the call fails, the feedback still saves, just without a sentiment.
+  try {
+    const result = await comprehend.send(
+      new DetectSentimentCommand({ Text: description, LanguageCode: "en" })
+    );
+    // MIXED is rare and has no badge; fold it into NEUTRAL
+    item.sentiment = result.Sentiment === "MIXED" ? "NEUTRAL" : result.Sentiment;
+    item.sentimentScores = {
+      pos: Number(result.SentimentScore.Positive.toFixed(4)),
+      neu: Number(result.SentimentScore.Neutral.toFixed(4)),
+      neg: Number(result.SentimentScore.Negative.toFixed(4)),
+    };
+  } catch (err) {
+    console.error("Comprehend DetectSentiment failed", err.name, err.message);
+  }
 
   await client.send(new PutCommand({ TableName: TABLE_NAME, Item: item }));
 

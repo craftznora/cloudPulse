@@ -199,12 +199,21 @@ export default function SubmitPage() {
         category,
         attachmentKey: attachmentKey || undefined,
       });
+      // Phase 5: the API returns the real Comprehend sentiment on the item
+      const names = { POS: "POSITIVE", NEU: "NEUTRAL", NEG: "NEGATIVE" };
+      const tones = { POS: "text-pos", NEU: "text-faint", NEG: "text-neg" };
+      const realSentiment = item.sentiment
+        ? {
+            label: names[item.sentiment] ?? item.sentiment,
+            tone: tones[item.sentiment] ?? "text-faint",
+            score: item.sentimentScores?.[item.sentiment.toLowerCase()] ?? null,
+          }
+        : null;
       setResult({
         id: item.ref,
         title: item.title,
         category: item.category,
-        // Real sentiment arrives in Phase 5 (Comprehend); simulated in mock mode
-        sentiment: apiEnabled ? null : mockSentiment(`${trimmed} ${description}`),
+        sentiment: realSentiment ?? (apiEnabled ? null : mockSentiment(`${trimmed} ${description}`)),
         attachment: fileName || "none",
         live: apiEnabled,
       });
@@ -563,11 +572,14 @@ export default function SubmitPage() {
                   <span className="text-faint">sentiment</span>
                   {result.sentiment ? (
                     <span className={result.sentiment.tone}>
-                      {result.sentiment.label} · {result.sentiment.score.toFixed(2)} · simulated
-                      (Comprehend in Phase 5)
+                      {result.sentiment.label}
+                      {result.sentiment.score != null
+                        ? ` · ${result.sentiment.score.toFixed(2)}`
+                        : ""}
+                      {result.live ? " · scored by Comprehend" : " · simulated"}
                     </span>
                   ) : (
-                    <span className="text-faint">pending · Comprehend in Phase 5</span>
+                    <span className="text-faint">not scored</span>
                   )}
                 </div>
                 <div className="flex justify-between">
