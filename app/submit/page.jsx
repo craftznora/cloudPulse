@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CATEGORIES } from "../../lib/data";
 import { createFeedback, getUploadUrl, apiEnabled } from "../../lib/api";
+import { currentUser, authEnabled } from "../../lib/auth";
 import Reveal from "../../components/Reveal";
 
 const steps = [
@@ -57,10 +58,21 @@ export default function SubmitPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [attachmentKey, setAttachmentKey] = useState(null);
+  const [user, setUser] = useState(null);
   const xhrRef = useRef(null);
   const uploadTimer = useRef(null);
 
   useEffect(() => () => clearInterval(uploadTimer.current), []);
+
+  // Phase 4: POST /feedback requires a signed-in user
+  useEffect(() => {
+    const sync = () => setUser(currentUser());
+    sync();
+    window.addEventListener("cloudpulse-auth", sync);
+    return () => window.removeEventListener("cloudpulse-auth", sync);
+  }, []);
+
+  const mustSignIn = authEnabled && !user;
 
   // Success modal: close on Escape, lock page scroll while open
   useEffect(() => {
@@ -225,6 +237,23 @@ export default function SubmitPage() {
           </p>
         </Reveal>
       </section>
+
+      {mustSignIn && (
+        <div className="px-5 pt-6 sm:px-14">
+          <div className="pop-in flex flex-wrap items-center justify-between gap-3 rounded-lg border border-brand bg-brand-soft px-5 py-4">
+            <span className="text-[13.5px] text-ink">
+              <strong className="font-semibold">Sign in to submit feedback.</strong>{" "}
+              Browsing the list stays open to everyone.
+            </span>
+            <Link
+              href="/signin"
+              className="rounded-[5px] bg-brand px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-brand-dark"
+            >
+              Sign in
+            </Link>
+          </div>
+        </div>
+      )}
 
       <section className="grid items-start gap-6 px-5 pb-16 pt-6 sm:px-14 lg:grid-cols-[1.7fr_1fr]">
         {/* Form */}
@@ -417,11 +446,13 @@ export default function SubmitPage() {
               </button>
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || mustSignIn}
                 className={`rounded-[5px] px-6 py-3 text-sm font-semibold text-white transition-all ${
                   submitting
                     ? "cursor-wait bg-brand/60"
-                    : "bg-brand hover:bg-brand-dark hover:shadow-lg hover:shadow-brand/20 active:scale-[0.98]"
+                    : mustSignIn
+                      ? "cursor-not-allowed bg-brand/40"
+                      : "bg-brand hover:bg-brand-dark hover:shadow-lg hover:shadow-brand/20 active:scale-[0.98]"
                 }`}
               >
                 {submitting ? "Submitting…" : "Submit feedback"}

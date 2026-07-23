@@ -2,18 +2,35 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import CognitoNote from "../../components/CognitoNote";
+import { signIn, authEnabled } from "../../lib/auth";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [authError, setAuthError] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const router = useRouter();
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    // TODO: integrate with Cognito authentication
-    setSubmitted(true);
+    if (!authEnabled) {
+      setSubmitted(true);
+      return;
+    }
+    setAuthError(null);
+    setBusy(true);
+    try {
+      // Cognito InitiateAuth: verifies credentials and returns the JWT
+      await signIn(email, password);
+      router.push("/submit");
+    } catch (err) {
+      setAuthError(err.message);
+      setBusy(false);
+    }
   }
 
   return (
@@ -79,11 +96,22 @@ export default function SignInPage() {
             </div>
           </div>
 
+          {authError && (
+            <div className="pop-in rounded-[5px] border border-neg bg-[#fffafa] px-4 py-3 text-[13px] text-neg">
+              {authError}
+            </div>
+          )}
+
           <button
             type="submit"
-            className="rounded-[5px] bg-brand py-3.5 text-[14.5px] font-semibold text-white transition-all hover:bg-brand-dark hover:shadow-lg hover:shadow-brand/20 active:scale-[0.98]"
+            disabled={busy}
+            className={`rounded-[5px] py-3.5 text-[14.5px] font-semibold text-white transition-all ${
+              busy
+                ? "cursor-wait bg-brand/60"
+                : "bg-brand hover:bg-brand-dark hover:shadow-lg hover:shadow-brand/20 active:scale-[0.98]"
+            }`}
           >
-            Sign in
+            {busy ? "Signing in…" : "Sign in"}
           </button>
 
           {submitted && (

@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import CognitoNote from "../../components/CognitoNote";
+import { signUp, confirmSignUp, resendCode, signIn, authEnabled } from "../../lib/auth";
 
 function passwordStrength(pw) {
   let score = 0;
@@ -27,7 +29,10 @@ export default function SignUpPage() {
   const [resendIn, setResendIn] = useState(RESEND_SECONDS);
   const [verified, setVerified] = useState(false);
   const [codeError, setCodeError] = useState(false);
+  const [authError, setAuthError] = useState(null);
+  const [busy, setBusy] = useState(false);
   const inputsRef = useRef([]);
+  const router = useRouter();
 
   const score = passwordStrength(password);
 
@@ -37,9 +42,21 @@ export default function SignUpPage() {
     return () => clearTimeout(t);
   }, [step, resendIn]);
 
-  function handleDetails(e) {
+  async function handleDetails(e) {
     e.preventDefault();
-    // TODO: connect with Cognito signup and verification flows
+    setAuthError(null);
+    if (authEnabled) {
+      setBusy(true);
+      try {
+        // Cognito SignUp: creates the account and emails the 6-digit code
+        await signUp({ name, email, password });
+      } catch (err) {
+        setAuthError(err.message);
+        setBusy(false);
+        return;
+      }
+      setBusy(false);
+    }
     setStep(2);
     setResendIn(RESEND_SECONDS);
     setTimeout(() => inputsRef.current[0]?.focus(), 50);
@@ -71,19 +88,42 @@ export default function SignUpPage() {
     inputsRef.current[Math.min(digits.length, 5)]?.focus();
   }
 
-  function handleVerify(e) {
+  async function handleVerify(e) {
     e.preventDefault();
     if (code.some((d) => d === "")) {
       setCodeError(true);
       return;
     }
-    setVerified(true);
+    if (!authEnabled) {
+      setVerified(true);
+      return;
+    }
+    setAuthError(null);
+    setBusy(true);
+    try {
+      // Confirm the code, then sign straight in so the user lands authenticated
+      await confirmSignUp(email, code.join(""));
+      await signIn(email, password);
+      setVerified(true);
+      router.push("/submit");
+    } catch (err) {
+      setAuthError(err.message);
+    } finally {
+      setBusy(false);
+    }
   }
 
-  function handleResend() {
+  async function handleResend() {
     setCode(["", "", "", "", "", ""]);
     setResendIn(RESEND_SECONDS);
     inputsRef.current[0]?.focus();
+    if (authEnabled) {
+      try {
+        await resendCode(email);
+      } catch (err) {
+        setAuthError(err.message);
+      }
+    }
   }
 
   const stepper = (
@@ -193,11 +233,22 @@ export default function SignUpPage() {
               </div>
             </div>
 
+            {authError && (
+              <div className="pop-in rounded-[5px] border border-neg bg-[#fffafa] px-4 py-3 text-[13px] text-neg">
+                {authError}
+              </div>
+            )}
+
             <button
               type="submit"
-              className="rounded-[5px] bg-brand py-3.5 text-[14.5px] font-semibold text-white transition-all hover:bg-brand-dark hover:shadow-lg hover:shadow-brand/20 active:scale-[0.98]"
+              disabled={busy}
+              className={`rounded-[5px] py-3.5 text-[14.5px] font-semibold text-white transition-all ${
+                busy
+                  ? "cursor-wait bg-brand/60"
+                  : "bg-brand hover:bg-brand-dark hover:shadow-lg hover:shadow-brand/20 active:scale-[0.98]"
+              }`}
             >
-              Continue to verification
+              {busy ? "Creating account…" : "Continue to verification"}
             </button>
 
             <div className="flex items-start gap-3 rounded-[5px] border border-line-soft bg-panel px-4 py-3.5">
@@ -269,16 +320,29 @@ export default function SignUpPage() {
               )}
             </div>
 
+            {authError && (
+              <div className="pop-in rounded-[5px] border border-neg bg-[#fffafa] px-4 py-3 text-[13px] text-neg">
+                {authError}
+              </div>
+            )}
+
             <button
               type="submit"
-              className="rounded-[5px] bg-brand py-3.5 text-[14.5px] font-semibold text-white transition-all hover:bg-brand-dark hover:shadow-lg hover:shadow-brand/20 active:scale-[0.98]"
+              disabled={busy}
+              className={`rounded-[5px] py-3.5 text-[14.5px] font-semibold text-white transition-all ${
+                busy
+                  ? "cursor-wait bg-brand/60"
+                  : "bg-brand hover:bg-brand-dark hover:shadow-lg hover:shadow-brand/20 active:scale-[0.98]"
+              }`}
             >
-              Verify &amp; create account
+              {busy ? "Verifying…" : "Verify & create account"}
             </button>
 
             {verified && (
               <div className="pop-in rounded-[5px] bg-pos-soft px-4 py-3 font-mono text-xs text-pos">
-                Mock account verified. Cognito authentication integration is pending.
+                {authEnabled
+                  ? "Account verified, signing you in…"
+                  : "Mock account verified. Cognito authentication integration is pending."}
               </div>
             )}
 

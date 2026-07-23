@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { currentUser, signOut } from "../lib/auth";
 
 const icons = {
   home: (
@@ -41,6 +43,19 @@ const links = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const [user, setUser] = useState(null);
+
+  // Track auth state; the auth lib fires "cloudpulse-auth" on sign in/out
+  useEffect(() => {
+    const sync = () => setUser(currentUser());
+    sync();
+    window.addEventListener("cloudpulse-auth", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("cloudpulse-auth", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
 
   return (
     <header className="bg-navy text-[#e8ecf5]">
@@ -74,29 +89,43 @@ export default function Navbar() {
           })}
         </nav>
 
-        {/* TODO: integrate user auth/Cognito state here */}
-        <div className="flex items-center gap-2.5">
-          <Link
-            href="/signin"
-            className={`rounded-[3px] border px-3 py-1.5 font-mono text-[11px] transition-colors ${
-              pathname === "/signin"
-                ? "border-brand bg-brand text-white"
-                : "border-chip text-navlink hover:text-white"
-            }`}
-          >
-            SIGN IN
-          </Link>
-          <Link
-            href="/signup"
-            className={`hidden rounded-[3px] border px-3 py-1.5 font-mono text-[11px] transition-colors sm:inline-block ${
-              pathname === "/signup"
-                ? "border-brand bg-brand text-white"
-                : "border-chip text-navlink hover:text-white"
-            }`}
-          >
-            SIGN UP
-          </Link>
-        </div>
+        {user ? (
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-[5px] bg-chip text-[11px] font-semibold">
+              {user.name.slice(0, 2).toUpperCase()}
+            </div>
+            <span className="hidden text-[13px] text-subtext sm:inline">{user.name}</span>
+            <button
+              onClick={signOut}
+              className="rounded-[3px] border border-chip px-2.5 py-1.5 font-mono text-[11px] text-navlink transition-colors hover:text-white"
+            >
+              SIGN OUT
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2.5">
+            <Link
+              href="/signin"
+              className={`rounded-[3px] border px-3 py-1.5 font-mono text-[11px] transition-colors ${
+                pathname === "/signin"
+                  ? "border-brand bg-brand text-white"
+                  : "border-chip text-navlink hover:text-white"
+              }`}
+            >
+              SIGN IN
+            </Link>
+            <Link
+              href="/signup"
+              className={`hidden rounded-[3px] border px-3 py-1.5 font-mono text-[11px] transition-colors sm:inline-block ${
+                pathname === "/signup"
+                  ? "border-brand bg-brand text-white"
+                  : "border-chip text-navlink hover:text-white"
+              }`}
+            >
+              SIGN UP
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* mobile nav */}
