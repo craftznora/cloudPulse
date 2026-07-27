@@ -1,10 +1,8 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
-import { ComprehendClient, DetectSentimentCommand } from "@aws-sdk/client-comprehend";
 import { randomUUID } from "node:crypto";
 
 const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
-const comprehend = new ComprehendClient({});
 const TABLE_NAME = process.env.TABLE_NAME || "CloudPulseFeedback";
 
 const CATEGORIES = ["FEATURE", "BUG", "PROCESS", "PRAISE"];
@@ -53,9 +51,12 @@ export const handler = async (event) => {
 
   if (payload.attachmentKey) item.attachmentKey = String(payload.attachmentKey);
 
-  // Phase 5: score the description with Comprehend. Best effort on purpose:
-  // if the call fails, the feedback still saves, just without a sentiment.
+  // Phase 5: score the description with Comprehend. 
   try {
+    const { ComprehendClient, DetectSentimentCommand } = await import(
+      "@aws-sdk/client-comprehend"
+    );
+    const comprehend = new ComprehendClient({});
     const result = await comprehend.send(
       new DetectSentimentCommand({ Text: description, LanguageCode: "en" })
     );
